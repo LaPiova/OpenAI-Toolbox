@@ -1,0 +1,4 @@
+
+# Fill in the fields and rename .dev to .env before usage
+
+OPENAI_API_KEY="Insert Your Open AI API Key Here"
