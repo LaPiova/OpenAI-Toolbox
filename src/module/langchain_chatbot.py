@@ -42,6 +42,7 @@ class User:
 		agent = self.threads[thread_id]["agent"]
 		memory = self.threads[thread_id]["memory"]
 		agent.run(message)
+		self.last_thread = thread_id
 		return extract_last_AI_response((memory.load_memory_variables({}))['chat_history'])
 
 
