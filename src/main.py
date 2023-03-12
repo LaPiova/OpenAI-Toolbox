@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from module.langchain_chatbot import Langchain_Bot
+from module.ChatBotBackend.langchain_chatbot import Langchain_Bot
 
 load_dotenv()
 

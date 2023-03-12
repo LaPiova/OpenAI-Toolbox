@@ -1,6 +1,8 @@
 import os
 import openai
 
+# Deprecated version of ChatBot backend.
+
 class User:
 	"""
 	User class for OpenAI GPT-3.5-turbo chatbot
