@@ -1,7 +1,7 @@
 import os
 from langchain.agents import load_tools, initialize_agent
 from langchain.llms import OpenAI, OpenAIChat
-from langchain.chains.conversation.memory import ConversationSummaryBufferMemory
+from langchain.chains.conversation.memory import ConversationSummaryBufferMemory, ConversationBufferMemory
 from langchain.callbacks.base import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
@@ -28,7 +28,12 @@ class User:
 		self.last_thread: str = None
 
 	def create_thread(self, llm, thread_id):
-		memory = ConversationSummaryBufferMemory(llm=llm, memory_key="chat_history")
+		# memory = ConversationSummaryBufferMemory(llm=llm, memory_key="chat_history")
+		memory = ConversationSummaryBufferMemory(
+			llm=llm,
+			memory_key="chat_history",
+			max_token_limit=100000
+			)
 		agent = initialize_agent(
 			tools=load_tools(['google-serper']), 
 			llm=llm,
