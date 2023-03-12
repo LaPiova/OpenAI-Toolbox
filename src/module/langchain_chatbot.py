@@ -45,6 +45,24 @@ class User:
 		self.last_thread = thread_id
 		return extract_last_AI_response((memory.load_memory_variables({}))['chat_history'])
 
+	def list_threads(self):
+		return list(self.threads.keys())
+
+	def select_thread(self, thread_id):
+		if not (thread_id in self.threads):
+			return ("ERROR. Thread not found.")
+		else:
+			self.last_thread = thread_id
+			return ("Thread " + thread_id + " selected.")
+
+	def delete_thread(self, thread_id):
+		if not (thread_id in self.threads):
+			return ("ERROR. Thread not found.")
+		else:
+			del self.threads[thread_id]["agent"]
+			del self.threads[thread_id]["memory"]
+			del self.thread[thread_id]
+			return ("Thread " + thread_id + " deleted.")
 
 class Langchain_Bot:
 	"""

@@ -2,3 +2,7 @@
 # Fill in the fields and rename .dev to .env before usage
 
 OPENAI_API_KEY="Insert Your Open AI API Key Here"
+WOLFRAM_ALPHA_APPID="Insert Your Wolfram App ID Here"
+SERPER_API_KEY="Insert Your Serper API Key Here" # Serper.dev
+GOOGLE_API_KEY="Insert Your Google API Key Here"
+GOOGLE_CSE_ID="Insert Your Google Custom Search Engine ID Here"
