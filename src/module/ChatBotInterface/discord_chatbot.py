@@ -38,13 +38,13 @@ class DiscordBot:
 			author = message.user.id
 			await message.response.defer(ephemeral=isPrivate)
 		else:
-			author = message.author.id
+			author = message.user.id
 		try:
 			response = (f'> **{user_message}** - <@{str(author)}' + '> \n\n')
-			chat_model = os.getenv("CHAT_MODEL")
-			if chat_model == "OFFICIAL":
+			# chat_model = os.getenv("CHAT_MODEL")
+			# if chat_model == "OFFICIAL":
 				# response = f"{response}{await responses.official_handle_response(user_message)}"
-				response = f"{response}{await self.bot.chat(user_id=author, message=user_message, thread_id='test')}"
+			response = f"{response}{await self.bot.chat(user_id=author, message=user_message, thread_id='test')}"
 			# elif chat_model == "UNOFFICIAL":
 			# 	response = f"{response}{await responses.unofficial_handle_response(user_message)}"
 			char_limit = 1900
@@ -119,11 +119,11 @@ class DiscordBot:
 					prompt = f.read()
 					if (discord_channel_id):
 						logger.info(f"Send starting prompt with size {len(prompt)}")
-						chat_model = os.getenv("CHAT_MODEL")
+						# chat_model = os.getenv("CHAT_MODEL")
 						response = ""
-						if chat_model == "OFFICIAL":
+						# if chat_model == "OFFICIAL":
 							# response = f"{response}{await responses.official_handle_response(prompt)}"
-							response = f"{response}{await self.bot.chat(user_id=author, message=promp, thread_id='test')}"
+						response = f"{response}{await self.bot.chat(user_id=author, message=promp, thread_id='test')}"
 						# elif chat_model == "UNOFFICIAL":
 						# 	response = f"{response}{await responses.unofficial_handle_response(prompt)}"
 						channel = client.get_channel(int(discord_channel_id))
@@ -215,23 +215,23 @@ class DiscordBot:
 				logger.warning("\x1b[31mSwitch to replyAll mode\x1b[0m")
 			
 
-		@client.tree.command(name="chat-model", description="Switch different chat model")
-		@app_commands.choices(choices=[
-			app_commands.Choice(name="Official GPT-3.5", value="OFFICIAL"),
-			app_commands.Choice(name="Website ChatGPT", value="UNOFFCIAL")
-		])
-		async def chat_model(interaction: discord.Interaction, choices: app_commands.Choice[str]):
-			await interaction.response.defer(ephemeral=False)
-			if choices.value == "OFFICIAL":
-				os.environ["CHAT_MODEL"] = "OFFICIAL"
-				await interaction.followup.send(
-					"> **Info: You are now in Official GPT-3.5 model.**\n> You need to set your `OPENAI_API_KEY` in `env` file.")
-				logger.warning("\x1b[31mSwitch to OFFICIAL chat model\x1b[0m")
-			elif choices.value == "UNOFFCIAL":
-				os.environ["CHAT_MODEL"] = "UNOFFICIAL"
-				await interaction.followup.send(
-					"> **Info: You are now in Website ChatGPT model.**\n> You need to set your `SESSION_TOKEN` or `OPENAI_EMAIL` and `OPENAI_PASSWORD` in `env` file.")
-				logger.warning("\x1b[31mSwitch to UNOFFICIAL(Website) chat model\x1b[0m")
+		# @client.tree.command(name="chat-model", description="Switch different chat model")
+		# @app_commands.choices(choices=[
+		# 	app_commands.Choice(name="Official GPT-3.5", value="OFFICIAL"),
+		# 	app_commands.Choice(name="Website ChatGPT", value="UNOFFCIAL")
+		# ])
+		# async def chat_model(interaction: discord.Interaction, choices: app_commands.Choice[str]):
+		# 	await interaction.response.defer(ephemeral=False)
+		# 	if choices.value == "OFFICIAL":
+		# 		os.environ["CHAT_MODEL"] = "OFFICIAL"
+		# 		await interaction.followup.send(
+		# 			"> **Info: You are now in Official GPT-3.5 model.**\n> You need to set your `OPENAI_API_KEY` in `env` file.")
+		# 		logger.warning("\x1b[31mSwitch to OFFICIAL chat model\x1b[0m")
+		# 	elif choices.value == "UNOFFCIAL":
+		# 		os.environ["CHAT_MODEL"] = "UNOFFICIAL"
+		# 		await interaction.followup.send(
+		# 			"> **Info: You are now in Website ChatGPT model.**\n> You need to set your `SESSION_TOKEN` or `OPENAI_EMAIL` and `OPENAI_PASSWORD` in `env` file.")
+		# 		logger.warning("\x1b[31mSwitch to UNOFFICIAL(Website) chat model\x1b[0m")
 				
 		@client.tree.command(name="reset", description="Complete reset ChatGPT conversation history")
 		async def reset(interaction: discord.Interaction):
