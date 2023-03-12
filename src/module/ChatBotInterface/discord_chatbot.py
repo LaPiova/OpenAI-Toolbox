@@ -170,7 +170,9 @@ class DiscordBot:
 			isPrivate = self.init_user_and_isPrivate(author)
 			await interaction.response.defer(ephemeral=False)
 			if not isPrivate:
-				isPrivate = not isPrivate
+				# isPrivate = not isPrivate
+				self.users[author]["isPrivate"] = True
+				#
 				logger.warning("\x1b[31mSwitch to private mode\x1b[0m")
 				await interaction.followup.send(
 					"> **Info: Next, the response will be sent via private message. If you want to switch back to public mode, use `/public`**")
@@ -185,7 +187,9 @@ class DiscordBot:
 			isPrivate = self.init_user_and_isPrivate(author)
 			await interaction.response.defer(ephemeral=False)
 			if isPrivate:
-				isPrivate = not isPrivate
+				# isPrivate = not isPrivate
+				self.users[author]["isPrivate"] = False
+				#
 				await interaction.followup.send(
 					"> **Info: Next, the response will be sent to the channel directly. If you want to switch back to private mode, use `/private`**")
 				logger.warning("\x1b[31mSwitch to public mode\x1b[0m")
@@ -229,18 +233,20 @@ class DiscordBot:
 					"> **Info: You are now in Website ChatGPT model.**\n> You need to set your `SESSION_TOKEN` or `OPENAI_EMAIL` and `OPENAI_PASSWORD` in `env` file.")
 				logger.warning("\x1b[31mSwitch to UNOFFICIAL(Website) chat model\x1b[0m")
 				
-		# @client.tree.command(name="reset", description="Complete reset ChatGPT conversation history")
-		# async def reset(interaction: discord.Interaction):
-		# 	chat_model = os.getenv("CHAT_MODEL")
-		# 	if chat_model == "OFFICIAL":
-		# 		responses.offical_chatbot.reset()
-		# 	elif chat_model == "UNOFFICIAL":
-		# 		responses.unofficial_chatbot.reset_chat()
-		# 	await interaction.response.defer(ephemeral=False)
-		# 	await interaction.followup.send("> **Info: I have forgotten everything.**")
-		# 	logger.warning(
-		# 		"\x1b[31mChatGPT bot has been successfully reset\x1b[0m")
-		# 	await self.send_start_prompt(client)
+		@client.tree.command(name="reset", description="Complete reset ChatGPT conversation history")
+		async def reset(interaction: discord.Interaction):
+			# chat_model = os.getenv("CHAT_MODEL")
+			# if chat_model == "OFFICIAL":
+			# 	responses.offical_chatbot.reset()
+			# elif chat_model == "UNOFFICIAL":
+			# 	responses.unofficial_chatbot.reset_chat()
+			author = interaction.user.id
+			self.bot.users[author].delete_thread("test")
+			await interaction.response.defer(ephemeral=False)
+			await interaction.followup.send("> **Info: I have forgotten everything.**")
+			logger.warning(
+				"\x1b[31mChatGPT bot has been successfully reset\x1b[0m")
+			await self.send_start_prompt(client)
 
 		@client.tree.command(name="help", description="Show help for the bot")
 		async def help(interaction: discord.Interaction):
