@@ -61,7 +61,7 @@ class User:
 		else:
 			del self.threads[thread_id]["agent"]
 			del self.threads[thread_id]["memory"]
-			del self.thread[thread_id]
+			del self.threads[thread_id]
 			return ("Thread " + thread_id + " deleted.")
 
 class Langchain_Bot:
