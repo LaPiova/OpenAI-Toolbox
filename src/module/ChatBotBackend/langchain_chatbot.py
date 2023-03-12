@@ -73,7 +73,7 @@ class Langchain_Bot:
 		self.users = {}
 
 
-	def chat(self, user_id, message, thread_id=None):
+	async def chat(self, user_id, message, thread_id=None):
 		if not (user_id in self.users):
 			# User first time send messages.
 			if not thread_id:

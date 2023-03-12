@@ -3,11 +3,13 @@ import os
 from discord import app_commands
 from module.ChatBotInterface.GPT_discord_bot.src import responses
 from module.ChatBotInterface.GPT_discord_bot.src import log
+from module.ChatBotBackend.langchain_chatbot import Langchain_Bot
 import pdb
 
 logger = log.setup_logger(__name__)
 
 isPrivate = False
+bot = Langchain_Bot(temperature=0)
 
 class aclient(discord.Client):
     def __init__(self) -> None:
@@ -17,8 +19,9 @@ class aclient(discord.Client):
         self.tree = app_commands.CommandTree(self)
         self.activity = discord.Activity(type=discord.ActivityType.watching, name="/chat | /help")
 
-
 async def send_message(message, user_message):
+    global bot
+    global isPrivate
     isReplyAll =  os.getenv("REPLYING_ALL")
     if isReplyAll == "False":
         author = message.user.id
@@ -29,7 +32,8 @@ async def send_message(message, user_message):
         response = (f'> **{user_message}** - <@{str(author)}' + '> \n\n')
         chat_model = os.getenv("CHAT_MODEL")
         if chat_model == "OFFICIAL":
-            response = f"{response}{await responses.official_handle_response(user_message)}"
+            # response = f"{response}{await responses.official_handle_response(user_message)}"
+            response = f"{response}{await bot.chat(user_id=author, message=user_message, thread_id='test')}"
         elif chat_model == "UNOFFICIAL":
             response = f"{response}{await responses.unofficial_handle_response(user_message)}"
         char_limit = 1900
@@ -91,6 +95,7 @@ async def send_message(message, user_message):
 
 
 async def send_start_prompt(client):
+    global bot
     import os.path
 
     config_dir = os.path.abspath(f"{__file__}/../../")
@@ -106,7 +111,8 @@ async def send_start_prompt(client):
                     chat_model = os.getenv("CHAT_MODEL")
                     response = ""
                     if chat_model == "OFFICIAL":
-                        response = f"{response}{await responses.official_handle_response(prompt)}"
+                        # response = f"{response}{await responses.official_handle_response(prompt)}"
+                        response = f"{response}{await bot.chat(user_id=author, message=promp, thread_id='test')}"
                     elif chat_model == "UNOFFICIAL":
                         response = f"{response}{await responses.unofficial_handle_response(prompt)}"
                     channel = client.get_channel(int(discord_channel_id))

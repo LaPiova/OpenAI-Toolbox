@@ -20,7 +20,7 @@ tools = load_tools(['google-serper'])
 memory = ConversationSummaryBufferMemory(llm=llm, memory_key="chat_history")
 agent = initialize_agent(tools, llm, agent="conversational-react-description", memory=memory, verbose=True)
 
-agent.run("You are a linux terminal. You will execute my input and display the output. You will also display an error if the input is wrong. If I'm going to talk to you in English, the input will be in a curly bracket {like this}.")
+agent.run("What is the latest news about Silicon Valley Bank?")
 # agent.run("pwd")
 print(memory.load_memory_variables({}))
 
