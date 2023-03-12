@@ -87,7 +87,7 @@ class Langchain_Bot:
 			user = self.users[user_id]
 			if not thread_id:
 				# User sends messages to the last thread
-				if not users.last_thread:
+				if not user.last_thread:
 					# User has no threads left
 					return ("ERROR. No previous thread. Please specify the thread name.")
 				else:
