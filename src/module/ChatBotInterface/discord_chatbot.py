@@ -3,7 +3,8 @@ import os
 from discord import app_commands
 from module.ChatBotInterface.GPT_discord_bot.src import responses
 from module.ChatBotInterface.GPT_discord_bot.src import log
-from module.ChatBotBackend.langchain_chatbot import Langchain_Bot
+from module.ChatBotBackend.OpenAI import ChatBot
+# from module.ChatBotBackend.langchain_chatbot import Langchain_Bot
 
 logger = log.setup_logger(__name__)
 
@@ -21,7 +22,7 @@ class aclient(discord.Client):
 class DiscordBot:
 
 	def __init__(self, temperature=0):
-		self.bot = Langchain_Bot(temperature=temperature)
+		self.bot = ChatBot(temperature=temperature)
 		self.users = {}
 
 	def init_user_and_isPrivate(self, user_id, private=False) -> bool:
@@ -44,7 +45,7 @@ class DiscordBot:
 			# chat_model = os.getenv("CHAT_MODEL")
 			# if chat_model == "OFFICIAL":
 				# response = f"{response}{await responses.official_handle_response(user_message)}"
-			response = f"{response}{await self.bot.chat(user_id=author, message=user_message, thread_id='test')}"
+			response = f"{response}{await self.bot.ask_stream(user_id=author, message=user_message)}"
 			# elif chat_model == "UNOFFICIAL":
 			# 	response = f"{response}{await responses.unofficial_handle_response(user_message)}"
 			char_limit = 1900
@@ -123,7 +124,7 @@ class DiscordBot:
 						response = ""
 						# if chat_model == "OFFICIAL":
 							# response = f"{response}{await responses.official_handle_response(prompt)}"
-						response = f"{response}{await self.bot.chat(user_id=author, message=promp, thread_id='test')}"
+						response = f"{response}{await self.bot.ask_stream(user_id=author, message=prompt, thread_id='test')}"
 						# elif chat_model == "UNOFFICIAL":
 						# 	response = f"{response}{await responses.unofficial_handle_response(prompt)}"
 						channel = client.get_channel(int(discord_channel_id))
@@ -241,7 +242,7 @@ class DiscordBot:
 			# elif chat_model == "UNOFFICIAL":
 			# 	responses.unofficial_chatbot.reset_chat()
 			author = interaction.user.id
-			self.bot.users[author].delete_thread("test")
+			self.bot.users[author].delete_thread()
 			await interaction.response.defer(ephemeral=False)
 			await interaction.followup.send("> **Info: I have forgotten everything.**")
 			logger.warning(
