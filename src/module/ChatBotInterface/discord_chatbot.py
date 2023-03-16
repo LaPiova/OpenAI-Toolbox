@@ -298,7 +298,7 @@ class DiscordBot:
 			- `/threads` Show all conversation threads stored in the bot and current conversation you are on\n
 			- `/select [thread_id]` Select a conversation thread to chat with\n
 			- `/set [thread_id]` Change the thread_ID of your current thread\n
-			For complete documentation, please visit https://github.com/Zero6992/chatGPT-discord-bot""")
+			For complete documentation, please visit https://github.com/LaPiova/OpenAI-Toolbox""")
 			logger.info(
 				"\x1b[31mSomeone need help!\x1b[0m")
 
