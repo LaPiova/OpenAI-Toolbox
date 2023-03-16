@@ -295,10 +295,16 @@ class DiscordBot:
 			- `/chat [message]` Chat with ChatGPT!
 			- `/public` ChatGPT switch to public mode
 			- `/replyall` ChatGPT switch between replyall mode and default mode
-			- `/reset` Clear ChatGPT conversation history\n
-			- `/threads` Show all conversation threads stored in the bot and current conversation you are on\n
-			- `/select [thread_id]` Select a conversation thread to chat with\n
-			- `/set [thread_id]` Change the thread_ID of your current thread\n
+			- `/reset` Clear ChatGPT conversation history
+			- `/threads` Show all conversation threads stored in the bot and current conversation you are on
+			- `/select [thread_id]` Select a conversation thread to chat with
+			- `/set [thread_id]` Change the thread_ID of your current thread
+			- `/create [thread_id] [prompt_key] [prompt:optional] [lang:optional]` Create a new thread named `[thread_id]`, with prompt template `[prompt_key]` or optional customized prompt `[prompt]`. The responses will be given in language `[lang]`. By default, the response will be in English.\n
+			- Sample prompt_key:
+				`default`: Default question-answering bot.
+				`translator`: Translate into the language you specified.
+				`linux`: Simulates a linux terminal.
+				`grammarly`: Improves and translate the input into the specified language with explanation.
 			For complete documentation, please visit https://github.com/LaPiova/OpenAI-Toolbox""")
 			logger.info(
 				"\x1b[31mSomeone need help!\x1b[0m")
