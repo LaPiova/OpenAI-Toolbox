@@ -12,9 +12,9 @@ def get_random_str(n:int)->str:
 def get_system_prompt(key:str, prompt=None, lang:str="English"):
 	SYSTEM_PROMPT_TEMPLATES: dict = {
 		"default": "You are ChatGPT, a large language model trained by OpenAI. You will answer questions precisely and coherently. If you don't know the answer, you will answer \"I don't know.\" honestly. All your responses in this conversation will be " + lang + ".",
-		"translator": "You are ChatGPT, a large language model based translator. If there are additional instructions from user, these instructions will be given inside curly braces, e.g. \" {Translate all future inputs into Chinese.}\". If there are no instructions, you will translate the input into " + lang + ".",
-		"linux": "I want you to act as a linux terminal. I will type commands and you will reply with what the terminal should show. I want you to only reply with the terminal output inside one unique code block, and nothing else. do not write explanations. do not type commands unless I instruct you to do so. When I need to tell you something in English, I will do so by putting text inside curly brackets {like this}. My first command is pwd.",
-		"grammarly": "I want you to act as an English translator, spelling corrector and improver. I will speak to you in any language and you will detect the language, translate it and answer in the corrected and improved version of my text, in English. I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level English words and sentences. Keep the meaning same, but make them more literary. I want you to only reply the correction, the improvements and nothing else, do not write explanations. My first sentence is \"istanbulu cok seviyom burada olmak cok guzel\"."
+		"translator": "I want to you to act as a " + lang + " translator. I will speak to you in any language and you will translate it to " + lang + ". I want you to only reply with the translation and nothing else. Do not say anything non-related to translation unless I instruct you to do so. Do not write explanations. Do not type commands unless I instruct you to do so. When I need to tell you something in English, I will do so by putting text inside curly brackets {like this}.",
+		"linux": "I want you to act as a linux terminal. I will type commands and you will reply with what the terminal should show. I want you to only reply with the terminal output inside one unique code block, and nothing else. do not write explanations. do not type commands unless I instruct you to do so. When I need to tell you something in English, I will do so by putting text inside curly brackets {like this}.",
+		"grammarly": "I want you to act as an " + lang + " translator, spelling corrector and improver. I will speak to you in any language and you will detect the language, translate it and answer in the corrected and improved version of my text, in " + lang + ". I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level " + lang + " words and sentences. Keep the meaning same, but make them more literary. I want you to only reply the correction, the improvements and nothing else, do not write explanations."
 	}
 	if prompt:
 		return prompt
@@ -43,11 +43,14 @@ class User:
 		self.threads: dict = {	}
 
 	def list_thread(self):
-		keys = ""
-		for key in self.threads:
-			keys += (key + ", ")
-		keys = keys[:-2] + "."
-		return keys, self.last_thread
+		if not self.threads:
+			return None, None
+		else:
+			keys = ""
+			for key in self.threads:
+				keys += (key + ", ")
+			keys = keys[:-2] + "."
+			return keys, self.last_thread
 
 
 	def delete_thread(self, thread_id=None):
@@ -66,7 +69,10 @@ class User:
 			return "You are on conversation " + key + " now."
 		else:
 			thread_list, cur_thread = self.list_thread()
-			return "Thread_ID does not exist. You have threads of " + thread_list + " Currently you are on " + cur_thread + "."
+			if thread_list:
+				return "Thread_ID does not exist. You have threads of " + thread_list + " Currently you are on " + cur_thread + "."
+			else:
+				return "You don't have any conversation started."
 
 	def set_thread_id(self, thread_id):
 		if not self.last_thread:
@@ -77,6 +83,19 @@ class User:
 			del self.threads[self.last_thread]
 			self.last_thread = thread_id
 			return response
+
+	def create_thread(self, thread_id, prompt_key, prompt, lang):
+		prompt = get_system_prompt(prompt_key, prompt, lang)
+		if not prompt:
+			return "Prompt key or prompt does not exists."
+		else:
+			thread = [
+				{'role': 'system','content': prompt}
+			]
+			self.threads[thread_id] = thread
+			self.last_thread = thread_id
+			return "Thread " + thread_id + " created."
+
 
 class ChatBot:
 	"""
@@ -116,8 +135,8 @@ class ChatBot:
 			user_id=None,
 			thread_id=None,
 			message=None,
-			prompt_key=None,
-			lang=None,
+			# prompt_key=None,
+			# lang=None,
 			system_prompt: str="You are ChatGPT, a large language model trained by OpenAI. You will answer questions precisely and coherently.",
 		):
 		# User ID handling
@@ -132,11 +151,11 @@ class ChatBot:
 			# Create new user
 			user = User(user_id)
 			self.users[user_id] = user
-		if prompt_key:
-			if lang:
-				system_prompt = get_system_prompt(prompt_key, prompt=None, lang=lang)
-			else:
-				system_prompt = get_system_prompt(prompt_key, prompt=None)
+		# if prompt_key:
+		# 	if lang:
+		# 		system_prompt = get_system_prompt(prompt_key, prompt=None, lang=lang)
+		# 	else:
+		# 		system_prompt = get_system_prompt(prompt_key, prompt=None)
 
 		# Thread ID handling
 		if user.last_thread:

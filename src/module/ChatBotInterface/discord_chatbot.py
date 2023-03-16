@@ -3,7 +3,7 @@ import os
 from discord import app_commands
 from module.ChatBotInterface.GPT_discord_bot.src import responses
 from module.ChatBotInterface.GPT_discord_bot.src import log
-from module.ChatBotBackend.OpenAI import ChatBot
+from module.ChatBotBackend.OpenAI import ChatBot, User
 # from module.ChatBotBackend.langchain_chatbot import Langchain_Bot
 
 logger = log.setup_logger(__name__)
@@ -27,9 +27,12 @@ class DiscordBot:
 
 	def init_user_and_isPrivate(self, user_id, private=False) -> bool:
 		if (user_id in self.users):
+			logger.info(f"User {user_id} already exists")
 			return self.users[user_id]["isPrivate"]
 		else:
 			self.users[user_id] = {"isPrivate": False, "threads": set()}
+			self.bot.users[user_id] = User(user_id)
+			logger.info(f"User {user_id} created")
 		return private
 
 	async def send_message(self, message, user_message):
@@ -237,6 +240,7 @@ class DiscordBot:
 		@client.tree.command(name="reset", description="Complete reset ChatGPT conversation history")
 		async def reset(interaction: discord.Interaction):
 			author = interaction.user.id
+			isPrivate = self.init_user_and_isPrivate(author)
 			self.bot.users[author].delete_thread()
 			await interaction.response.defer(ephemeral=False)
 			await interaction.followup.send("> **Info: I have forgotten everything.**")
@@ -244,16 +248,29 @@ class DiscordBot:
 				"\x1b[31mChatGPT bot has been successfully reset\x1b[0m")
 			await self.send_start_prompt(client)
 
+		@client.tree.command(name="create", description="Create a new conversation thread")
+		async def create_thread(interaction: discord.Interaction, *, thread_id:str, prompt_key:str, prompt:str=None, lang:str="English"):
+			author = interaction.user.id
+			isPrivate = self.init_user_and_isPrivate(author)
+			resposne = self.bot.users[author].create_thread(thread_id, prompt_key, prompt, lang)
+			await interaction.response.defer(ephemeral=False)
+			await interaction.followup.send("> **" + resposne + "**")
+
 		@client.tree.command(name="threads", description="Show all conversation threads stored in the bot and current conversation you are on")
 		async def list_thread(interaction: discord.Interaction):
 			author = interaction.user.id
+			isPrivate = self.init_user_and_isPrivate(author)
 			thread_list, cur_thread = self.bot.users[author].list_thread()
 			await interaction.response.defer(ephemeral=False)
-			await interaction.followup.send("> **Info: You have: " + thread_list + " Currently, you are on " + cur_thread +".**")
+			if thread_list:
+				await interaction.followup.send("> **Info: You have: " + thread_list + " Currently, you are on " + cur_thread +".**")
+			else:
+				await interaction.followup.send("> **Info: You haven't started any conversation yet.**")
 
 		@client.tree.command(name="select", description="Select a conversation thread to chat with")
 		async def select_thread(interaction: discord.Interaction, *, thread_id: str):
 			author = interaction.user.id
+			isPrivate = self.init_user_and_isPrivate(author)
 			response = self.bot.users[author].select_thread(thread_id)
 			await interaction.response.defer(ephemeral=False)
 			await interaction.followup.send("> **" + response + "**")
@@ -261,18 +278,23 @@ class DiscordBot:
 		@client.tree.command(name="set", description="Change the thread_ID of your current thread")
 		async def set_thread_id(interaction: discord.Interaction, *, thread_id: str):
 			author = interaction.user.id
+			isPrivate = self.init_user_and_isPrivate(author)
 			response = self.bot.users[author].set_thread_id(thread_id)
 			await interaction.response.defer(ephemeral=False)
 			await interaction.followup.send("> **" + response + "**")
 
 		@client.tree.command(name="help", description="Show help for the bot")
 		async def help(interaction: discord.Interaction):
+			isPrivate = self.init_user_and_isPrivate(author)
 			await interaction.response.defer(ephemeral=False)
 			await interaction.followup.send(""":star:**BASIC COMMANDS** \n
 			- `/chat [message]` Chat with ChatGPT!
 			- `/public` ChatGPT switch to public mode
 			- `/replyall` ChatGPT switch between replyall mode and default mode
 			- `/reset` Clear ChatGPT conversation history\n
+			- `/threads` Show all conversation threads stored in the bot and current conversation you are on\n
+			- `/select [thread_id]` Select a conversation thread to chat with\n
+			- `/set [thread_id]` Change the thread_ID of your current thread\n
 			For complete documentation, please visit https://github.com/Zero6992/chatGPT-discord-bot""")
 			logger.info(
 				"\x1b[31mSomeone need help!\x1b[0m")
