@@ -57,6 +57,7 @@ class User:
 			return ("ERROR. Thread not found.")
 		else:
 			del self.threads[thread_id]
+			self.last_thread = None
 			return ("Thread " + thread_id + " deleted.")
 
 	def select_thread(self, key):
@@ -66,6 +67,16 @@ class User:
 		else:
 			thread_list, cur_thread = self.list_thread()
 			return "Thread_ID does not exist. You have threads of " + thread_list + " Currently you are on " + cur_thread + "."
+
+	def set_thread_id(self, thread_id):
+		if not self.last_thread:
+			return "You are not in any conversation!"
+		else:
+			self.threads[thread_id] = self.threads[self.last_thread]
+			response = "You've renamed " + self.last_thread + " to " + thread_id + "."
+			del self.threads[self.last_thread]
+			self.last_thread = thread_id
+			return response
 
 class ChatBot:
 	"""

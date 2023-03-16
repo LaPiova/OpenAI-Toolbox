@@ -258,6 +258,13 @@ class DiscordBot:
 			await interaction.response.defer(ephemeral=False)
 			await interaction.followup.send("> **" + response + "**")
 
+		@client.tree.command(name="set", description="Change the thread_ID of your current thread")
+		async def set_thread_id(interaction: discord.Interaction, *, thread_id: str):
+			author = interaction.user.id
+			response = self.bot.users[author].set_thread_id(thread_id)
+			await interaction.response.defer(ephemeral=False)
+			await interaction.followup.send("> **" + response + "**")
+
 		@client.tree.command(name="help", description="Show help for the bot")
 		async def help(interaction: discord.Interaction):
 			await interaction.response.defer(ephemeral=False)
