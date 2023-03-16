@@ -2,7 +2,7 @@
 
 > ### Build your own Discord bot using ChatGPT
 
-## This work is based on [Zero6992 / chatGPT-discord-bot](https://github.com/Zero6992/chatGPT-discord-bot), [hwchase17 / langchain](https://github.com/hwchase17/langchain) and [f / awesome-chatgpt-prompts](https://github.com/f/awesome-chatgpt-prompts). Thanks to your great works!
+> ### This work is based on [Zero6992 / chatGPT-discord-bot](https://github.com/Zero6992/chatGPT-discord-bot), [hwchase17 / langchain](https://github.com/hwchase17/langchain) and [f / awesome-chatgpt-prompts](https://github.com/f/awesome-chatgpt-prompts). Thanks to your great works!
 
 ## Features
 
