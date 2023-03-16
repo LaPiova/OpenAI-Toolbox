@@ -27,7 +27,7 @@ class DiscordBot:
 
 	def init_user_and_isPrivate(self, user_id, private=False) -> bool:
 		if (user_id in self.users):
-			logger.info(f"User {user_id} already exists")
+			# logger.info(f"User {user_id} already exists")
 			return self.users[user_id]["isPrivate"]
 		else:
 			self.users[user_id] = {"isPrivate": False, "threads": set()}
@@ -288,6 +288,7 @@ class DiscordBot:
 
 		@client.tree.command(name="help", description="Show help for the bot")
 		async def help(interaction: discord.Interaction):
+			author = interaction.user.id
 			isPrivate = self.init_user_and_isPrivate(author)
 			await interaction.response.defer(ephemeral=False)
 			await interaction.followup.send(""":star:**BASIC COMMANDS** \n
