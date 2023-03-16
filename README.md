@@ -22,8 +22,11 @@
 
   ![image](https://user-images.githubusercontent.com/89479282/206565873-b181e600-e793-4a94-a978-47f806b986da.gif)
 
-* `replyall mode` the bot will reply to all messages in the channel without using slash commands (`/chat` will also be unavailable)
-
+### Prompt_key Templates:
+* `default` The bot will answer precisely and coherently. If it doesn't know, it will honestly reply "I don't know".
+* `translator` The bot will translate user input in any language into the `lang` you specified.
+* `linux` The bot will act as a simulated linux terminal.
+* `grammarly` The bot will translate your input into the language you have specified. If it is already the language you specified, the bot will try to make the translation more elegant and accurate.
 
 # Setup
 
@@ -96,17 +99,6 @@
 2. Navigate to the directory where you installed the ChatGPT Discord bot
 
 3. Run `python3 main.py` to start the bot
-
-## Step 3: Run the bot with Docker
-
-1. Build the Docker image & Run the Docker container `docker compose up -d`
-
-2. Inspect whether the bot works well `docker logs -t chatgpt-discord-bot`
-
-   ### Stop the bot:
-
-   * `docker ps` to see the list of running services
-   * `docker stop <BOT CONTAINER ID>` to stop the running bot
 
 ### Have a good chat!
 ## Optional: Disable logging
