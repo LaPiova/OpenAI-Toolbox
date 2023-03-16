@@ -263,7 +263,10 @@ class DiscordBot:
 			thread_list, cur_thread = self.bot.users[author].list_thread()
 			await interaction.response.defer(ephemeral=False)
 			if thread_list:
-				await interaction.followup.send("> **Info: You have: " + thread_list + " Currently, you are on " + cur_thread +".**")
+				if cur_thread:
+					await interaction.followup.send("> **Info: You have: " + thread_list + " Currently, you are on " + cur_thread +".**")
+				else:
+					await interaction.followup.send("> **Info: You have: " + thread_list + " Currently, you are not on any threads.**")
 			else:
 				await interaction.followup.send("> **Info: You haven't started any conversation yet.**")
 
