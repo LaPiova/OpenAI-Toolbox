@@ -1,4 +1,6 @@
-# ChatGPT Discord Bot
+# OpenAI-Toolbox
+
+> ## Currently we only have ChatGPT Discord bot module
 
 > ### Build your own Discord bot using ChatGPT
 
