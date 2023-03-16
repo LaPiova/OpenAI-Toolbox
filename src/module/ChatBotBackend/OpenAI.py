@@ -47,10 +47,8 @@ class User:
 		for key in self.threads:
 			keys += (key + ", ")
 		keys = keys[:-2] + "."
-		return keys
+		return keys, self.last_thread
 
-	def cur_thread(self):
-		return self.last_thread
 
 	def delete_thread(self, thread_id=None):
 		if not thread_id:
@@ -60,6 +58,14 @@ class User:
 		else:
 			del self.threads[thread_id]
 			return ("Thread " + thread_id + " deleted.")
+
+	def select_thread(self, key):
+		if key in self.threads:
+			self.last_thread = key
+			return "You are on conversation " + key + " now."
+		else:
+			thread_list, cur_thread = self.list_thread()
+			return "Thread_ID does not exist. You have threads of " + thread_list + " Currently you are on " + cur_thread + "."
 
 class ChatBot:
 	"""
@@ -151,8 +157,6 @@ class ChatBot:
 
 		user.last_thread = thread_id
 
-		print(user.threads[thread_id])
-
 		response = openai.ChatCompletion.create(
 			model=self.model,
 			messages=user.threads[thread_id],
@@ -160,6 +164,6 @@ class ChatBot:
 			stream=True)
 		response = get_stream_response(response)
 		user.threads[thread_id].append({'role': 'assistant', 'content': response})
-		print(user.threads[thread_id])
+
 		return response
 

@@ -60,7 +60,7 @@ class DiscordBot:
 							if isReplyAll == "True":
 								await message.channel.send(parts[i])
 							else:
-								await message.followup.send(parts[i])
+								await message.followup.send(parts[i], ephemeral=isPrivate)
 
 						else: # Odd-numbered parts are code blocks
 							code_block = parts[i].split("\n")
@@ -80,11 +80,11 @@ class DiscordBot:
 									if isReplyAll == "True":
 										await message.channel.send(f"```{chunk}```")
 									else:
-										await message.followup.send(f"```{chunk}```")
+										await message.followup.send(f"```{chunk}```", ephemeral=isPrivate)
 							elif isReplyAll == "True":
 								await message.channel.send(f"```{formatted_code_block}```")
 							else:
-								await message.followup.send(f"```{formatted_code_block}```")
+								await message.followup.send(f"```{formatted_code_block}```", ephemeral=isPrivate)
 
 				else:
 					response_chunks = [response[i:i+char_limit]
@@ -93,16 +93,16 @@ class DiscordBot:
 						if isReplyAll == "True":
 							await message.channel.send(chunk)
 						else:
-							await message.followup.send(chunk)
+							await message.followup.send(chunk, ephemeral=isPrivate)
 			elif isReplyAll == "True":
 				await message.channel.send(response)
 			else:
-				await message.followup.send(response)
+				await message.followup.send(response, ephemeral=isPrivate)
 		except Exception as e:
 			if isReplyAll == "True":
 				await message.channel.send("> **Error: Something went wrong, please try again later!**")
 			else:
-				await message.followup.send("> **Error: Something went wrong, please try again later!**")
+				await message.followup.send("> **Error: Something went wrong, please try again later!**", ephemeral=isPrivate)
 			logger.exception(f"Error while sending message: {e}")
 
 
@@ -199,21 +199,21 @@ class DiscordBot:
 					"> **Warn: You already on public mode. If you want to switch to private mode, use `/private`**")
 				logger.info("You already on public mode!")
 
-		@client.tree.command(name="replyall", description="Toggle replyAll access")
-		async def replyall(interaction: discord.Interaction):
-			isReplyAll =  os.getenv("REPLYING_ALL")
-			os.environ["REPLYING_ALL_DISCORD_CHANNEL_ID"] = str(interaction.channel_id)
-			await interaction.response.defer(ephemeral=False)
-			if isReplyAll == "True":
-				os.environ["REPLYING_ALL"] = "False"
-				await interaction.followup.send(
-					"> **Info: The bot will only response to the slash command `/chat` next. If you want to switch back to replyAll mode, use `/replyAll` again.**")
-				logger.warning("\x1b[31mSwitch to normal mode\x1b[0m")
-			elif isReplyAll == "False":
-				os.environ["REPLYING_ALL"] = "True"
-				await interaction.followup.send(
-					"> **Info: Next, the bot will response to all message in this channel only.If you want to switch back to normal mode, use `/replyAll` again.**")
-				logger.warning("\x1b[31mSwitch to replyAll mode\x1b[0m")
+		# @client.tree.command(name="replyall", description="Toggle replyAll access")
+		# async def replyall(interaction: discord.Interaction):
+		# 	isReplyAll =  os.getenv("REPLYING_ALL")
+		# 	os.environ["REPLYING_ALL_DISCORD_CHANNEL_ID"] = str(interaction.channel_id)
+		# 	await interaction.response.defer(ephemeral=False)
+		# 	if isReplyAll == "True":
+		# 		os.environ["REPLYING_ALL"] = "False"
+		# 		await interaction.followup.send(
+		# 			"> **Info: The bot will only response to the slash command `/chat` next. If you want to switch back to replyAll mode, use `/replyAll` again.**")
+		# 		logger.warning("\x1b[31mSwitch to normal mode\x1b[0m")
+		# 	elif isReplyAll == "False":
+		# 		os.environ["REPLYING_ALL"] = "True"
+		# 		await interaction.followup.send(
+		# 			"> **Info: Next, the bot will response to all message in this channel only.If you want to switch back to normal mode, use `/replyAll` again.**")
+		# 		logger.warning("\x1b[31mSwitch to replyAll mode\x1b[0m")
 			
 
 		# @client.tree.command(name="chat-model", description="Switch different chat model")
@@ -236,11 +236,6 @@ class DiscordBot:
 				
 		@client.tree.command(name="reset", description="Complete reset ChatGPT conversation history")
 		async def reset(interaction: discord.Interaction):
-			# chat_model = os.getenv("CHAT_MODEL")
-			# if chat_model == "OFFICIAL":
-			# 	responses.offical_chatbot.reset()
-			# elif chat_model == "UNOFFICIAL":
-			# 	responses.unofficial_chatbot.reset_chat()
 			author = interaction.user.id
 			self.bot.users[author].delete_thread()
 			await interaction.response.defer(ephemeral=False)
@@ -248,6 +243,20 @@ class DiscordBot:
 			logger.warning(
 				"\x1b[31mChatGPT bot has been successfully reset\x1b[0m")
 			await self.send_start_prompt(client)
+
+		@client.tree.command(name="threads", description="Show all conversation threads stored in the bot and current conversation you are on")
+		async def list_thread(interaction: discord.Interaction):
+			author = interaction.user.id
+			thread_list, cur_thread = self.bot.users[author].list_thread()
+			await interaction.response.defer(ephemeral=False)
+			await interaction.followup.send("> **Info: You have: " + thread_list + " Currently, you are on " + cur_thread +".**")
+
+		@client.tree.command(name="select", description="Select a conversation thread to chat with")
+		async def select_thread(interaction: discord.Interaction, *, thread_id: str):
+			author = interaction.user.id
+			response = self.bot.users[author].select_thread(thread_id)
+			await interaction.response.defer(ephemeral=False)
+			await interaction.followup.send("> **" + response + "**")
 
 		@client.tree.command(name="help", description="Show help for the bot")
 		async def help(interaction: discord.Interaction):
