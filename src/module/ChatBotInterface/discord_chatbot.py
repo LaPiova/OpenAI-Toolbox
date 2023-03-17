@@ -1,12 +1,12 @@
 import discord
 import os
 from discord import app_commands
-from module.ChatBotInterface.GPT_discord_bot.src import responses
-from module.ChatBotInterface.GPT_discord_bot.src import log
+from dotenv import load_dotenv
+from module.ChatBotInterface.utils import log
 from module.ChatBotBackend.OpenAI import ChatBot, User
-# from module.ChatBotBackend.langchain_chatbot import Langchain_Bot
 
 logger = log.setup_logger(__name__)
+load_dotenv("../../.env")
 
 class aclient(discord.Client):
 	def __init__(self) -> None:
@@ -45,12 +45,7 @@ class DiscordBot:
 			author = message.user.id
 		try:
 			response = (f'> **{user_message}** - <@{str(author)}' + '> \n\n')
-			# chat_model = os.getenv("CHAT_MODEL")
-			# if chat_model == "OFFICIAL":
-				# response = f"{response}{await responses.official_handle_response(user_message)}"
 			response = f"{response}{await self.bot.ask_stream(user_id=author, message=user_message)}"
-			# elif chat_model == "UNOFFICIAL":
-			# 	response = f"{response}{await responses.unofficial_handle_response(user_message)}"
 			char_limit = 1900
 			if len(response) > char_limit:
 				# Split the response into smaller chunks of no more than 1900 characters each(Discord limit is 2000 per chunk)

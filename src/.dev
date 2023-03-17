@@ -7,3 +7,11 @@ SERPER_API_KEY="Insert Your Serper API Key Here" # Serper.dev
 GOOGLE_API_KEY="Insert Your Google API Key Here"
 GOOGLE_CSE_ID="Insert Your Google Custom Search Engine ID Here"
 DISCORD_BOT_TOKEN="Insert Your Discord Bot Token Here"
+
+# Optional setting
+CHAT_MODEL="OFFICIAL"
+OPENAI_ENGINE="gpt-3.5-turbo-0301"
+LOGGING="True"
+REPLYING_ALL="False"
+DISCORD_CHANNEL_ID=""
+REPLYING_ALL_DISCORD_CHANNEL_ID=""
