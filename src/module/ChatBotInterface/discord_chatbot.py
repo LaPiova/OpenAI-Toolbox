@@ -160,7 +160,7 @@ class DiscordBot:
 			user_message = message
 			channel = str(interaction.channel)
 			logger.info(
-				f"\x1b[31m{username}\x1b[0m : '{user_message}' ({channel})")
+				f"\x1b[31m{username}\x1b[0m : 'Sent a message'")
 			await self.send_message(interaction, user_message)
 
 		@client.tree.command(name="private", description="Toggle private access")
