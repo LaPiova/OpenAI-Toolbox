@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from module.ChatBotInterface.utils import log
 from module.ChatBotBackend.OpenAI import ChatBot, User
 from discord.ext import tasks
+import traceback
 
 logger = log.setup_logger(__name__)
 load_dotenv("../../.env")
@@ -158,6 +159,14 @@ class DiscordBot:
 			await client.tree.sync()
 			logger.info(f'{client.user} is now running!')
 			self.save_history_loop.start()
+
+		@client.event
+		async def on_error(self, event, *args, **kwargs):
+		    exc_type, value, tb = sys.exc_info()
+		    traceback_text = ''.join(traceback.format_exception(exc_type, value, tb))
+		    print(f"Ignoring exception in {event}:\n{traceback_text}")
+		    await client.logout()
+		    await client.login()
 
 		@client.tree.command(name="chat", description="Have a chat with ChatGPT")
 		async def chat(interaction: discord.Interaction, *, message: str):
