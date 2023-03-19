@@ -2,6 +2,7 @@ from module.ChatBotInterface.discord_chatbot import DiscordBot
 from dotenv import load_dotenv
 import sys
 import signal
+import logging
 
 load_dotenv()
 bot = DiscordBot()
@@ -15,5 +16,9 @@ def halting_handler(signum, frame):
 if __name__ == '__main__': 
     signal.signal(signal.SIGTERM, halting_handler)
     signal.signal(signal.SIGINT, halting_handler)
-    bot.run_discord_bot()
+    while True:
+        try:
+            bot.run_discord_bot()
+        except Exception as e:
+            logging.error(e)
     
