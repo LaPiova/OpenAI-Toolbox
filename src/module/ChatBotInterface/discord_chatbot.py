@@ -4,9 +4,11 @@ from discord import app_commands
 from dotenv import load_dotenv
 from module.ChatBotInterface.utils import log
 from module.ChatBotBackend.OpenAI import ChatBot, User
+from discord.ext import tasks
 
 logger = log.setup_logger(__name__)
 load_dotenv("../../.env")
+
 
 class aclient(discord.Client):
 	def __init__(self) -> None:
@@ -23,17 +25,25 @@ class DiscordBot:
 
 	def __init__(self, temperature=0):
 		self.bot = ChatBot(temperature=temperature)
-		self.users = {}
+		self.users = self.bot.load_history()
 
-	def init_user_and_isPrivate(self, user_id, private=False) -> bool:
+	def init_user_and_isPrivate(self, user_id, private=True) -> bool:
 		if (user_id in self.users):
 			# logger.info(f"User {user_id} already exists")
 			return self.users[user_id]["isPrivate"]
 		else:
-			self.users[user_id] = {"isPrivate": False, "threads": set()}
+			self.users[user_id] = {"isPrivate": True}
 			self.bot.users[user_id] = User(user_id)
 			logger.info(f"User {user_id} created")
 		return private
+
+	def save_user_history(self):
+		self.bot.save_history()
+		logger.info("User history saved.")
+
+	@tasks.loop(seconds=10)
+	async def save_history_loop(self):
+		self.save_user_history()
 
 	async def send_message(self, message, user_message):
 		isPrivate = self.init_user_and_isPrivate(message.user.id)
@@ -45,7 +55,10 @@ class DiscordBot:
 			author = message.user.id
 		try:
 			response = (f'> **{user_message}** - <@{str(author)}' + '> \n\n')
-			response = f"{response}{await self.bot.ask_stream(user_id=author, message=user_message)}"
+			try:
+				response = f"{response}{await self.bot.ask_stream(user_id=author, message=user_message)}"
+			except:
+				logger.error("Error in asking stream. Please try again.")
 			char_limit = 1900
 			if len(response) > char_limit:
 				# Split the response into smaller chunks of no more than 1900 characters each(Discord limit is 2000 per chunk)
@@ -144,16 +157,17 @@ class DiscordBot:
 			await self.send_start_prompt(client)
 			await client.tree.sync()
 			logger.info(f'{client.user} is now running!')
+			self.save_history_loop.start()
 
 		@client.tree.command(name="chat", description="Have a chat with ChatGPT")
 		async def chat(interaction: discord.Interaction, *, message: str):
-			isReplyAll =  os.getenv("REPLYING_ALL")
-			if isReplyAll == "True":
-				await interaction.response.defer(ephemeral=False)
-				await interaction.followup.send(
-					"> **Warn: You already on replyAll mode. If you want to use slash command, switch to normal mode, use `/replyall` again**")
-				logger.warning("\x1b[31mYou already on replyAll mode, can't use slash command!\x1b[0m")
-				return
+			# isReplyAll =  os.getenv("REPLYING_ALL")
+			# if isReplyAll == "True":
+			# 	await interaction.response.defer(ephemeral=False)
+			# 	await interaction.followup.send(
+			# 		"> **Warn: You already on replyAll mode. If you want to use slash command, switch to normal mode, use `/replyall` again**")
+			# 	logger.warning("\x1b[31mYou already on replyAll mode, can't use slash command!\x1b[0m")
+			# 	return
 			if interaction.user == client.user:
 				return
 			username = str(interaction.user)
@@ -247,16 +261,16 @@ class DiscordBot:
 		async def create_thread(interaction: discord.Interaction, *, thread_id:str, prompt_key:str, prompt:str=None, lang:str="English"):
 			author = interaction.user.id
 			isPrivate = self.init_user_and_isPrivate(author)
-			resposne = self.bot.users[author].create_thread(thread_id, prompt_key, prompt, lang)
-			await interaction.response.defer(ephemeral=False)
-			await interaction.followup.send("> **" + resposne + "**")
+			response = self.bot.users[author].create_thread(thread_id, prompt_key, prompt, lang)
+			await interaction.response.defer(ephemeral=isPrivate)
+			await interaction.followup.send("> **" + response + "**")
 
 		@client.tree.command(name="threads", description="Show all conversation threads stored in the bot and current conversation you are on")
 		async def list_thread(interaction: discord.Interaction):
 			author = interaction.user.id
 			isPrivate = self.init_user_and_isPrivate(author)
 			thread_list, cur_thread = self.bot.users[author].list_thread()
-			await interaction.response.defer(ephemeral=False)
+			await interaction.response.defer(ephemeral=isPrivate)
 			if thread_list:
 				if cur_thread:
 					await interaction.followup.send("> **Info: You have: " + thread_list + " Currently, you are on " + cur_thread +".**")
@@ -270,7 +284,7 @@ class DiscordBot:
 			author = interaction.user.id
 			isPrivate = self.init_user_and_isPrivate(author)
 			response = self.bot.users[author].select_thread(thread_id)
-			await interaction.response.defer(ephemeral=False)
+			await interaction.response.defer(ephemeral=isPrivate)
 			await interaction.followup.send("> **" + response + "**")
 
 		@client.tree.command(name="set", description="Change the thread_ID of your current thread")
@@ -278,7 +292,7 @@ class DiscordBot:
 			author = interaction.user.id
 			isPrivate = self.init_user_and_isPrivate(author)
 			response = self.bot.users[author].set_thread_id(thread_id)
-			await interaction.response.defer(ephemeral=False)
+			await interaction.response.defer(ephemeral=isPrivate)
 			await interaction.followup.send("> **" + response + "**")
 
 		@client.tree.command(name="help", description="Show help for the bot")

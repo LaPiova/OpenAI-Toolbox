@@ -2,6 +2,8 @@ import os
 import openai
 import random
 import string
+import pickle
+# import pdb
 
 def get_random_str(n:int)->str:
 	"""
@@ -31,7 +33,6 @@ def get_stream_response(response) -> str:
 		if "content" in chunk["choices"][0]["delta"]:
 			ret_msg += chunk["choices"][0]["delta"]["content"]
 	return ret_msg
-
 
 class User:
 	"""
@@ -129,6 +130,24 @@ class ChatBot:
 		self.n = n
 		self.users: dict = {}
 
+	def save_history(self)->dict:
+		path = "history/save.pkl"
+		os.makedirs(os.path.dirname(path), exist_ok=True)
+		if os.path.exists(path):
+			with open(path, "wb") as f:
+				pickle.dump(self.users, f)
+		else:
+			with open(path, "xb") as f:
+				pickle.dump(self.users, f)
+
+	def load_history(self):
+		try:
+			with open("history/save.pkl", "rb") as f:
+				self.users = pickle.load(f)
+			return {key:{"isPrivate":True} for key in self.users}
+		except Exception as e:
+			print(e)
+			return {}
 
 	async def ask_stream(
 			self,
@@ -140,6 +159,7 @@ class ChatBot:
 			system_prompt: str="You are ChatGPT, a large language model trained by OpenAI. You will answer questions precisely and coherently.",
 		):
 		# User ID handling
+		# pdb.set_trace()
 		if not user_id:
 			# If user_id not specified
 			print("User ID is required.")
