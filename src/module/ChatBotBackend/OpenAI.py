@@ -3,7 +3,8 @@ import openai
 import random
 import string
 import pickle
-# import pdb
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 def get_random_str(n:int)->str:
 	"""
@@ -33,6 +34,15 @@ def get_stream_response(response) -> str:
 		if "content" in chunk["choices"][0]["delta"]:
 			ret_msg += chunk["choices"][0]["delta"]["content"]
 	return ret_msg
+
+def get_oepnai_response(model, messages, temperature)->str:
+	response = openai.ChatCompletion.create(
+		model=model,
+		messages=messages,
+		temperature=temperature,
+		stream=True)
+	response = get_stream_response(response)
+	return response
 
 class User:
 	"""
@@ -207,12 +217,18 @@ class ChatBot:
 
 		user.last_thread = thread_id
 
-		response = openai.ChatCompletion.create(
-			model=self.model,
-			messages=user.threads[thread_id],
-			temperature=self.temperature,
-			stream=True)
-		response = get_stream_response(response)
+		# response = openai.ChatCompletion.create(
+		# 	model=self.model,
+		# 	messages=user.threads[thread_id],
+		# 	temperature=self.temperature,
+		# 	stream=True)
+		# response = get_stream_response(response)
+		loop = asyncio.get_event_loop()
+		with ThreadPoolExecutor() as executor:
+			response = await loop.run_in_executor(executor, get_oepnai_response, 
+				self.model, 
+				user.threads[thread_id],
+				self.temperature,)
 		user.threads[thread_id].append({'role': 'assistant', 'content': response})
 
 		return response
