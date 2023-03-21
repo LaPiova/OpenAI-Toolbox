@@ -1,6 +1,6 @@
 # OpenAI-Toolbox
 
-> ## Currently we only have ChatGPT Discord bot module
+> ### Currently we only have ChatGPT Discord bot module
 
 > ### Build your own Discord bot using ChatGPT
 
@@ -11,18 +11,20 @@
 * `/chat [message]` Chat with ChatGPT!
 * `/private` ChatGPT switch to private mode. This flag only applies to the user who execute it.
 * `/public`  ChatGPT switch to public  mode. This flag only applies to the user who execute it.
-* `/reset` Clear ChatGPT conversation history of the current conversation thread you are on.
-* `/create thread_id prompt_key prompt:optional lang:optional` Create a new thread named `thread_id`, with system prompt template `prompt_key`, or customized template `prompt`, and replies you in the language `lang`.
+* `/reset [thread_id]` Clear ChatGPT conversation history of the current conversation thread you are on. If `[thread_id]` is specified, it will reset the corresponding thread instead.
+* `/delete [thread_id]` Delete the current conversation thread you are on. If `[thread_id]` is specified, it will delete the corresponding thread instead.
+* `/create [thread_id] [prompt_key] [prompt:optional] [lang:optional]` Create a new thread named `thread_id`, with system prompt template `prompt_key`, or customized template `prompt`, and replies you in the language `lang`.
 * `/threads` List threads you have and the thread you are currently on.
-* `/select thread_id` Switch between your existing threads.
+* `/select [thread_id]` Switch between your existing threads.
+* `/set [thread_id]` Rename your current thread.
 
 ### Mode
 
-* `public mode (default)`  the bot directly reply on the channel
+* `public mode`  the bot directly reply on the channel
 
   ![image](https://user-images.githubusercontent.com/89479282/206565977-d7c5d405-fdb4-4202-bbdd-715b7c8e8415.gif)
 
-* `private mode` the bot's reply can only be seen by the person who used the command
+* `private mode (default)` the bot's reply can only be seen by the person who used the command
 
   ![image](https://user-images.githubusercontent.com/89479282/206565873-b181e600-e793-4a94-a978-47f806b986da.gif)
 
@@ -35,6 +37,10 @@
 # Setup
 
 ## Critical prerequisites to install
+
+* Create virtual environment ```python3 -m venv .venv```
+
+* Get into virtual enviroment ```source .venv/bin/activate```
 
 * run ```pip3 install -r requirements.txt```
 
@@ -69,17 +75,6 @@
    ![image](https://user-images.githubusercontent.com/89479282/207970699-2e0cb671-8636-4e27-b1f3-b75d6db9b57e.PNG)
 
 3. Store the SECRET KEY to `.env` under the `OPENAI_API_KEY`
-
-4. You're all set for [Step 3](#step-3-run-the-bot-on-the-desktop)
-
-## Step 2: Website ChatGPT authentication - 2 approaches
-
-### Email/Password authentication (Not supported for Google/Microsoft accounts)
-1. Create an account on https://chat.openai.com/chat
-
-2. Save your email into `.env` under `OPENAI_EMAIL`
-
-3. Save your password into `.env` under `OPENAI_PASSWORD`
 
 4. You're all set for [Step 3](#step-3-run-the-bot-on-the-desktop)
 
