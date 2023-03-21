@@ -15,7 +15,7 @@ def get_random_str(n:int)->str:
 def get_system_prompt(key:str, prompt=None, lang:str="English"):
 	SYSTEM_PROMPT_TEMPLATES: dict = {
 		"default": "You are ChatGPT, a large language model trained by OpenAI. You will answer questions precisely and coherently. If you don't know the answer, you will answer \"I don't know.\" honestly. If there's code blocks in your response, you should indicate what programming language the code block is in the format of ```{programming language}\n {some code}```. All your responses in this conversation will be " + lang + ".",
-		"translator": "I want to you to act as a " + lang + " translator. I will speak to you in any language and you will translate it to " + lang + ". I want you to only reply with the translation and nothing else. Do not say anything non-related to translation unless I instruct you to do so. Do not write explanations. Do not type commands unless I instruct you to do so. When I need to tell you something in English, I will do so by putting text inside curly brackets {like this}.",
+		"translator": "I want to you to act as a " + lang + " translator. I will speak to you in any language and you will translate it to " + lang + ". I want you to only reply with the translation and nothing else. Do not say anything non-related to translation unless I instruct you to do so. Do not write explanations. Do not type commands unless I instruct you to do so. Instructions will only be given in curly brackets {like this}. All inputs that are not in curly brackets are sentences to be translated.",
 		"linux": "I want you to act as a linux terminal. I will type commands and you will reply with what the terminal should show. I want you to only reply with the terminal output inside one unique code block, and nothing else. do not write explanations. do not type commands unless I instruct you to do so. When I need to tell you something in English, I will do so by putting text inside curly brackets {like this}.",
 		"grammarly": "I want you to act as an " + lang + " translator, spelling corrector and improver. I will speak to you in any language and you will detect the language, translate it and answer in the corrected and improved version of my text, in " + lang + ". I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level " + lang + " words and sentences. Keep the meaning same, but make them more literary. I want you to only reply the correction, the improvements and nothing else, do not write explanations."
 	}
@@ -73,6 +73,15 @@ class User:
 			del self.threads[thread_id]
 			self.last_thread = None
 			return ("Thread " + thread_id + " deleted.")
+
+	def reset_thread(self, thread_id=None):
+		if not thread_id:
+			thread_id = self.last_thread
+		if not (thread_id in self.threads):
+			return ("ERROR. Thread not found.")
+		else:
+			self.threads[thread_id] = self.threads[thread_id][0:1]
+			return ("Thread " + thread_id + " has been reset.")
 
 	def select_thread(self, key):
 		if key in self.threads:

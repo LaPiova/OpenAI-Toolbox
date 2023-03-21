@@ -255,16 +255,28 @@ class DiscordBot:
 		# 			"> **Info: You are now in Website ChatGPT model.**\n> You need to set your `SESSION_TOKEN` or `OPENAI_EMAIL` and `OPENAI_PASSWORD` in `env` file.")
 		# 		logger.warning("\x1b[31mSwitch to UNOFFICIAL(Website) chat model\x1b[0m")
 				
-		@client.tree.command(name="reset", description="Complete reset ChatGPT conversation history")
-		async def reset(interaction: discord.Interaction):
+		@client.tree.command(name="delete", description="Complete reset ChatGPT conversation history")
+		async def delete(interaction: discord.Interaction, *, thread_id:str=None):
 			author = interaction.user.id
 			isPrivate = self.init_user_and_isPrivate(author)
-			self.bot.users[author].delete_thread()
+			self.bot.users[author].delete_thread(thread_id=thread_id)
+			await interaction.response.defer(ephemeral=False)
+			await interaction.followup.send("> **Info: I have deleted this thread.**")
+			logger.warning(
+				"\x1b[31mChatGPT bot has successfully deleted this thread.\x1b[0m")
+			await self.send_start_prompt(client)
+
+		@client.tree.command(name="reset", description="Complete reset ChatGPT conversation history")
+		async def reset(interaction: discord.Interaction, *, thread_id:str=None):
+			author = interaction.user.id
+			isPrivate = self.init_user_and_isPrivate(author)
+			self.bot.users[author].reset_thread(thread_id=thread_id)
 			await interaction.response.defer(ephemeral=False)
 			await interaction.followup.send("> **Info: I have forgotten everything.**")
 			logger.warning(
-				"\x1b[31mChatGPT bot has been successfully reset\x1b[0m")
+				"\x1b[31mChatGPT bot has successfully reset this thread.\x1b[0m")
 			await self.send_start_prompt(client)
+
 
 		@client.tree.command(name="create", description="Create a new conversation thread")
 		async def create_thread(interaction: discord.Interaction, *, thread_id:str, prompt_key:str, prompt:str=None, lang:str="English"):
