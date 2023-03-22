@@ -24,8 +24,8 @@ class aclient(discord.Client):
 
 class DiscordBot:
 
-	def __init__(self, temperature=0):
-		self.bot = ChatBot(temperature=temperature)
+	def __init__(self, temperature=0, model="gpt-3.5-turbo-0301"):
+		self.bot = ChatBot(temperature=temperature, model=model)
 		self.users = self.bot.load_history()
 
 	def init_user_and_isPrivate(self, user_id, private=True) -> bool:
