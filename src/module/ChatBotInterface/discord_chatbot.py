@@ -322,6 +322,7 @@ class DiscordBot:
 			isPrivate = self.init_user_and_isPrivate(author)
 			file = self.bot.users[author].export_chat_history(thread_id)
 			await interaction.response.defer(ephemeral=isPrivate)
+			await interaction.followup.send("> **Info: Your chat history has been sent to you in DM.**")
 			await interaction.user.send(file=file)
 
 		@client.tree.command(name="help", description="Show help for the bot")
