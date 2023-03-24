@@ -316,6 +316,14 @@ class DiscordBot:
 			await interaction.response.defer(ephemeral=isPrivate)
 			await interaction.followup.send("> **" + response + "**")
 
+		@client.tree.command(name="export", description="Export the chat history.")
+		async def export_chat_history(interaction: discord.Interaction, *, thread_id: str=None):
+			author = interaction.user.id
+			isPrivate = self.init_user_and_isPrivate(author)
+			file = self.bot.users[author].export_chat_history(thread_id)
+			await interaction.response.defer(ephemeral=isPrivate)
+			await interaction.user.send(file=file)
+
 		@client.tree.command(name="help", description="Show help for the bot")
 		async def help(interaction: discord.Interaction):
 			author = interaction.user.id

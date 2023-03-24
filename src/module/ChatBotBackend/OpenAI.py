@@ -1,9 +1,10 @@
-import os
+import os, json
 import openai
 import random
 import string
 import pickle
 import asyncio
+import discord
 from concurrent.futures import ThreadPoolExecutor
 
 def get_random_str(n:int)->str:
@@ -43,6 +44,14 @@ def get_oepnai_response(model, messages, temperature)->str:
 		stream=True)
 	response = get_stream_response(response)
 	return response
+
+def generate_markdown(thread, filename):
+	result = ""
+	for msg in thread:
+		result += ("## " + msg["role"] + "\n\n")
+		result += (msg["content"] + "\n\n")
+	with open(filename, "w") as f:
+		f.write(result)
 
 class User:
 	"""
@@ -115,6 +124,20 @@ class User:
 			self.threads[thread_id] = thread
 			self.last_thread = thread_id
 			return "Thread " + thread_id + " created."
+
+	def export_chat_history(self, thread_id=None):
+		if not thread_id:
+			thread_id = self.last_thread
+		if not (thread_id in self.threads):
+			return ("ERROR. Thread not found.")
+		filename = "Chat_" + get_random_str(4) + ".md"
+		generate_markdown(self.threads[thread_id], filename)
+		# Read the file into discord file
+		with open(filename, "rb") as f:
+			discord_file = discord.File(f)
+			# delete the local file
+			os.remove(filename)
+		return discord_file
 
 
 class ChatBot:
