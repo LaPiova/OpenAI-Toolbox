@@ -227,12 +227,12 @@ class ChatBot:
 			if thread_id in user.threads:
 				# thread_id exists
 				thread = user.threads[thread_id]
-				thread.append({'role': 'user', 'content': message})
+				# thread.append({'role': 'user', 'content': message})
 			else:
 				# thread_id doesn't exist, create new thread
 				thread = [
 					{'role': 'system', 'content': system_prompt},
-					{'role': 'user', 'content': message}
+					# {'role': 'user', 'content': message}
 				]
 				user.threads[thread_id] = thread
 		else:
@@ -243,7 +243,7 @@ class ChatBot:
 			thread_id = "thread_" + suffix
 			thread = [
 					{'role': 'system', 'content': system_prompt},
-					{'role': 'user', 'content': message}
+					# {'role': 'user', 'content': message}
 			]
 			user.threads[thread_id] = thread
 
@@ -256,12 +256,13 @@ class ChatBot:
 		# 	stream=True)
 		# response = get_stream_response(response)
 		loop = asyncio.get_event_loop()
+		print(user.threads[thread_id] + [{'role': 'user', 'content': message}])
 		with ThreadPoolExecutor() as executor:
 			response = await loop.run_in_executor(executor, get_oepnai_response, 
 				self.model, 
-				user.threads[thread_id],
+				user.threads[thread_id] + [{'role': 'user', 'content': message}],
 				self.temperature,)
-		user.threads[thread_id].append({'role': 'assistant', 'content': response})
+		user.threads[thread_id] += [{'role': 'user', 'content': message}, {'role': 'assistant', 'content': response}]
 
 		return response
 
