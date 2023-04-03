@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import sys
 import signal
 import logging
+import pdb
 
 load_dotenv()
 bot = DiscordBot()

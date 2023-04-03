@@ -1,11 +1,12 @@
 import discord
-import os
+import os, sys
 from discord import app_commands
 from dotenv import load_dotenv
 from module.ChatBotInterface.utils import log
-from module.ChatBotBackend.OpenAI import ChatBot, User
+from module.ChatBotBackend.default import ChatBot, User
 from discord.ext import tasks
 import traceback
+import pdb
 
 logger = log.setup_logger(__name__)
 load_dotenv("../../.env")
@@ -42,11 +43,11 @@ class DiscordBot:
 		self.bot.save_history()
 		logger.info("User history saved.")
 
-	@tasks.loop(seconds=10)
+	@tasks.loop(seconds=60)
 	async def save_history_loop(self):
 		self.save_user_history()
 
-	async def send_message(self, message, user_message):
+	async def send_message(self, message, user_message, index=0):
 		isPrivate = self.init_user_and_isPrivate(message.user.id)
 		isReplyAll =  os.getenv("REPLYING_ALL")
 		if isReplyAll == "False":
@@ -57,8 +58,12 @@ class DiscordBot:
 		try:
 			response = (f'> **{user_message}** - <@{str(author)}' + '> \n\n')
 			try:
-				response = f"{response}{await self.bot.ask_stream(user_id=author, message=user_message)}"
-			except:
+				if (index==1):
+					response = f"{response}{await self.bot.ask_stream(user_id=author, message=user_message, search_idx=True)}"
+				else:
+					response = f"{response}{await self.bot.ask_stream(user_id=author, message=user_message)}"
+			except Exception as e:
+				logger.error(e)
 				logger.error("Error in asking stream. Please try again.")
 			char_limit = 1900
 			if len(response) > char_limit:
@@ -165,11 +170,11 @@ class DiscordBot:
 		    exc_type, value, tb = sys.exc_info()
 		    traceback_text = ''.join(traceback.format_exception(exc_type, value, tb))
 		    print(f"Ignoring exception in {event}:\n{traceback_text}")
-		    await client.logout()
-		    await client.login()
+		    await client.close()
+		    await client.start()
 
 		@client.tree.command(name="chat", description="Have a chat with ChatGPT")
-		async def chat(interaction: discord.Interaction, *, message: str):
+		async def chat(interaction: discord.Interaction, *, message: str, index:int = 0):
 			# isReplyAll =  os.getenv("REPLYING_ALL")
 			# if isReplyAll == "True":
 			# 	await interaction.response.defer(ephemeral=False)
@@ -184,7 +189,7 @@ class DiscordBot:
 			channel = str(interaction.channel)
 			logger.info(
 				f"\x1b[31m{username}\x1b[0m : 'Sent a message'")
-			await self.send_message(interaction, user_message)
+			await self.send_message(interaction, user_message, index=index)
 
 		@client.tree.command(name="private", description="Toggle private access")
 		async def private(interaction: discord.Interaction):
@@ -235,25 +240,6 @@ class DiscordBot:
 		# 		await interaction.followup.send(
 		# 			"> **Info: Next, the bot will response to all message in this channel only.If you want to switch back to normal mode, use `/replyAll` again.**")
 		# 		logger.warning("\x1b[31mSwitch to replyAll mode\x1b[0m")
-			
-
-		# @client.tree.command(name="chat-model", description="Switch different chat model")
-		# @app_commands.choices(choices=[
-		# 	app_commands.Choice(name="Official GPT-3.5", value="OFFICIAL"),
-		# 	app_commands.Choice(name="Website ChatGPT", value="UNOFFCIAL")
-		# ])
-		# async def chat_model(interaction: discord.Interaction, choices: app_commands.Choice[str]):
-		# 	await interaction.response.defer(ephemeral=False)
-		# 	if choices.value == "OFFICIAL":
-		# 		os.environ["CHAT_MODEL"] = "OFFICIAL"
-		# 		await interaction.followup.send(
-		# 			"> **Info: You are now in Official GPT-3.5 model.**\n> You need to set your `OPENAI_API_KEY` in `env` file.")
-		# 		logger.warning("\x1b[31mSwitch to OFFICIAL chat model\x1b[0m")
-		# 	elif choices.value == "UNOFFCIAL":
-		# 		os.environ["CHAT_MODEL"] = "UNOFFICIAL"
-		# 		await interaction.followup.send(
-		# 			"> **Info: You are now in Website ChatGPT model.**\n> You need to set your `SESSION_TOKEN` or `OPENAI_EMAIL` and `OPENAI_PASSWORD` in `env` file.")
-		# 		logger.warning("\x1b[31mSwitch to UNOFFICIAL(Website) chat model\x1b[0m")
 				
 		@client.tree.command(name="delete", description="Complete reset ChatGPT conversation history")
 		async def delete(interaction: discord.Interaction, *, thread_id:str=None):
@@ -325,6 +311,14 @@ class DiscordBot:
 			await interaction.followup.send("> **Info: Your chat history has been sent to you in DM.**")
 			await interaction.user.send(file=file)
 
+		@client.tree.command(name="clear", description="Clear indices linked to current user.")
+		async def clear_indices(interaction: discord.Interaction, *, dim:int=1536):
+			author = interaction.user.id
+			isPrivate = self.init_user_and_isPrivate(author)
+			self.bot.users[author].clear_idx(dim=dim)
+			await interaction.response.defer(ephemeral=isPrivate)
+			await interaction.followup.send("> **Info: Your indices has been reset.**")
+
 		@client.tree.command(name="help", description="Show help for the bot")
 		async def help(interaction: discord.Interaction):
 			author = interaction.user.id
@@ -350,6 +344,22 @@ class DiscordBot:
 
 		@client.event
 		async def on_message(message):
+			author = message.author.id
+			isPrivate = self.init_user_and_isPrivate(author)
+			if not message.guild:
+				if message.attachments:
+					if author == client.user:
+						return
+					data = await message.attachments[0].read()
+					data = data.decode("utf-8")
+					try:
+						# pdb.set_trace()
+						self.bot.users[author].add_to_index(data)
+						await message.channel.send(f"**Your file has been added to the index.**")
+					except Exception as e:
+						logger.error(e)
+						await message.channel.send(f"**Error creating indices.**")
+
 			isReplyAll =  os.getenv("REPLYING_ALL")
 			if isReplyAll == "True" and message.channel.id == int(os.getenv("REPLYING_ALL_DISCORD_CHANNEL_ID")):
 				if message.author == client.user:

@@ -5,7 +5,12 @@ import string
 import pickle
 import asyncio
 import discord
+import logging
 from concurrent.futures import ThreadPoolExecutor
+from module.Index.index import Index, get_embedding
+from module.Index.utils.splitter import doc_split
+from utils.tokenizer import get_num_tokens
+from typing import Any, Callable
 
 def get_random_str(n:int)->str:
 	"""
@@ -26,7 +31,7 @@ def get_system_prompt(key:str, prompt=None, lang:str="English"):
 		if key in SYSTEM_PROMPT_TEMPLATES:
 			return SYSTEM_PROMPT_TEMPLATES[key]
 		else:
-			print("Prompt key does not exist.")
+			logging.error("Prompt key does not exist.")
 			return None
 
 def get_stream_response(response) -> str:
@@ -36,7 +41,7 @@ def get_stream_response(response) -> str:
 			ret_msg += chunk["choices"][0]["delta"]["content"]
 	return ret_msg
 
-def get_oepnai_response(model, messages, temperature)->str:
+def get_openai_response(model, messages, temperature)->str:
 	response = openai.ChatCompletion.create(
 		model=model,
 		messages=messages,
@@ -57,10 +62,11 @@ class User:
 	"""
 	User class for OpenAI GPT-3.5-turbo chatbot
 	"""
-	def __init__(self, user_id):
+	def __init__(self, user_id, idx_dim:int=1536, get_embedding: Callable[[str], Any]=get_embedding):
 		self.id = user_id
 		self.last_thread = None
 		self.threads: dict = {	}
+		self.idx = Index(dim=idx_dim, get_embedding=get_embedding)
 
 	def list_thread(self):
 		if not self.threads:
@@ -139,6 +145,15 @@ class User:
 			os.remove(filename)
 		return discord_file
 
+	def add_to_index(self, text:str):
+		sentences, paragraphs, _ = doc_split(text)
+		for paragraph in paragraphs:
+			self.idx.add(paragraph)
+
+	def clear_idx(self, dim):
+		self.idx = Index(dim=dim, get_embedding=get_embedding)
+
+
 
 class ChatBot:
 	"""
@@ -188,7 +203,7 @@ class ChatBot:
 				self.users = pickle.load(f)
 			return {key:{"isPrivate":True} for key in self.users}
 		except Exception as e:
-			print(e)
+			logging.error(e)
 			return {}
 
 	async def ask_stream(
@@ -196,15 +211,14 @@ class ChatBot:
 			user_id=None,
 			thread_id=None,
 			message=None,
-			# prompt_key=None,
-			# lang=None,
 			system_prompt: str="You are ChatGPT, a large language model trained by OpenAI. You will answer questions precisely and coherently.",
+			search_idx=False
 		):
 		# User ID handling
 		# pdb.set_trace()
 		if not user_id:
 			# If user_id not specified
-			print("User ID is required.")
+			logging.error("User ID is required.")
 			return None
 		if user_id in self.users:
 			# If user exists
@@ -218,7 +232,6 @@ class ChatBot:
 		# 		system_prompt = get_system_prompt(prompt_key, prompt=None, lang=lang)
 		# 	else:
 		# 		system_prompt = get_system_prompt(prompt_key, prompt=None)
-
 		# Thread ID handling
 		if user.last_thread:
 			thread_id = user.last_thread
@@ -227,12 +240,12 @@ class ChatBot:
 			if thread_id in user.threads:
 				# thread_id exists
 				thread = user.threads[thread_id]
-				thread.append({'role': 'user', 'content': message})
+				# thread.append({'role': 'user', 'content': message})
 			else:
 				# thread_id doesn't exist, create new thread
 				thread = [
 					{'role': 'system', 'content': system_prompt},
-					{'role': 'user', 'content': message}
+					# {'role': 'user', 'content': message}
 				]
 				user.threads[thread_id] = thread
 		else:
@@ -243,25 +256,46 @@ class ChatBot:
 			thread_id = "thread_" + suffix
 			thread = [
 					{'role': 'system', 'content': system_prompt},
-					{'role': 'user', 'content': message}
+					# {'role': 'user', 'content': message}
 			]
 			user.threads[thread_id] = thread
 
 		user.last_thread = thread_id
 
-		# response = openai.ChatCompletion.create(
-		# 	model=self.model,
-		# 	messages=user.threads[thread_id],
-		# 	temperature=self.temperature,
-		# 	stream=True)
-		# response = get_stream_response(response)
 		loop = asyncio.get_event_loop()
 		with ThreadPoolExecutor() as executor:
-			response = await loop.run_in_executor(executor, get_oepnai_response, 
-				self.model, 
-				user.threads[thread_id],
-				self.temperature,)
-		user.threads[thread_id].append({'role': 'assistant', 'content': response})
+			if search_idx:
+				tokens = 0
+				for chat in user.threads[thread_id]:
+					tokens += get_num_tokens(chat['content'])
+				tokens += get_num_tokens(message)
+				tokens += get_num_tokens("You can use the information below as a reference.\n")
+				token_limit = self.max_tokens - tokens
+				try:
+					references = user.idx.search(message, k=100, token_limit=token_limit)
+				except Exception as e:
+					logging.error(f"Error searching indices. Respond without indices.")
+					logging.error(e)
+					response = await loop.run_in_executor(executor, get_openai_response, 
+						self.model, 
+						user.threads[thread_id] + [{'role': 'user', 'content': message}],
+						self.temperature,)
+					user.threads[thread_id] += [{'role': 'user', 'content': message}, {'role': 'assistant', 'content': response}]
+					return response
+				input_message = message + "You can use the information below as a reference.\n";
+				for s in references:
+					input_message += s
+				logging.info(user.threads[thread_id] + [{'role': 'user', 'content': input_message}])
+				response = await loop.run_in_executor(executor, get_openai_response, 
+					self.model, 
+					user.threads[thread_id] + [{'role': 'user', 'content': input_message}],
+					self.temperature,)
+			else:
+				response = await loop.run_in_executor(executor, get_openai_response, 
+					self.model, 
+					user.threads[thread_id] + [{'role': 'user', 'content': message}],
+					self.temperature,)
+		user.threads[thread_id] += [{'role': 'user', 'content': message}, {'role': 'assistant', 'content': response}]
 
 		return response
 
