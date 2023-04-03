@@ -3,7 +3,7 @@ import os
 from discord import app_commands
 from dotenv import load_dotenv
 from module.ChatBotInterface.utils import log
-from module.ChatBotBackend.OpenAI import ChatBot, User
+from module.ChatBotBackend.default import ChatBot, User
 from discord.ext import tasks
 import traceback
 
