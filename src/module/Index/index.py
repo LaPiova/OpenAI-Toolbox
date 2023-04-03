@@ -31,7 +31,6 @@ class Index:
 		embedding = self.get_embedding(text)
 		if (k > len(self.texts)):
 			k = len(self.texts)
-		print(k)
 		_, indices = self.index.search(np.array(embedding).reshape(1, -1).astype(np.float32), k)
 		if not token_limit:
 			return [self.texts[i] for i in indices[0]]

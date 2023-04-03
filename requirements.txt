@@ -3,7 +3,7 @@ langchain==0.0.101
 openai==0.27.2
 wolframalpha==5.0.0
 transformers==4.26.1
-torch==1.13.1
+torch==2.0.0
 discord.py==2.1.0
 revChatGPT==3.2.0
 faiss-cpu==1.7.3
