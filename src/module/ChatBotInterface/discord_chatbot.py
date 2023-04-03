@@ -1,11 +1,12 @@
 import discord
-import os
+import os, sys
 from discord import app_commands
 from dotenv import load_dotenv
 from module.ChatBotInterface.utils import log
 from module.ChatBotBackend.default import ChatBot, User
 from discord.ext import tasks
 import traceback
+import pdb
 
 logger = log.setup_logger(__name__)
 load_dotenv("../../.env")
@@ -46,7 +47,7 @@ class DiscordBot:
 	async def save_history_loop(self):
 		self.save_user_history()
 
-	async def send_message(self, message, user_message):
+	async def send_message(self, message, user_message, index=0):
 		isPrivate = self.init_user_and_isPrivate(message.user.id)
 		isReplyAll =  os.getenv("REPLYING_ALL")
 		if isReplyAll == "False":
@@ -57,8 +58,12 @@ class DiscordBot:
 		try:
 			response = (f'> **{user_message}** - <@{str(author)}' + '> \n\n')
 			try:
-				response = f"{response}{await self.bot.ask_stream(user_id=author, message=user_message)}"
-			except:
+				if (index==1):
+					response = f"{response}{await self.bot.ask_stream(user_id=author, message=user_message, search_idx=True)}"
+				else:
+					response = f"{response}{await self.bot.ask_stream(user_id=author, message=user_message)}"
+			except Exception as e:
+				logger.error(e)
 				logger.error("Error in asking stream. Please try again.")
 			char_limit = 1900
 			if len(response) > char_limit:
@@ -165,11 +170,11 @@ class DiscordBot:
 		    exc_type, value, tb = sys.exc_info()
 		    traceback_text = ''.join(traceback.format_exception(exc_type, value, tb))
 		    print(f"Ignoring exception in {event}:\n{traceback_text}")
-		    await client.logout()
-		    await client.login()
+		    await client.close()
+		    await client.start()
 
 		@client.tree.command(name="chat", description="Have a chat with ChatGPT")
-		async def chat(interaction: discord.Interaction, *, message: str):
+		async def chat(interaction: discord.Interaction, *, message: str, index:int = 0):
 			# isReplyAll =  os.getenv("REPLYING_ALL")
 			# if isReplyAll == "True":
 			# 	await interaction.response.defer(ephemeral=False)
@@ -184,7 +189,7 @@ class DiscordBot:
 			channel = str(interaction.channel)
 			logger.info(
 				f"\x1b[31m{username}\x1b[0m : 'Sent a message'")
-			await self.send_message(interaction, user_message)
+			await self.send_message(interaction, user_message, index=index)
 
 		@client.tree.command(name="private", description="Toggle private access")
 		async def private(interaction: discord.Interaction):
@@ -350,6 +355,22 @@ class DiscordBot:
 
 		@client.event
 		async def on_message(message):
+			author = message.author.id
+			isPrivate = self.init_user_and_isPrivate(author)
+			if not message.guild:
+				if message.attachments:
+					if author == client.user:
+						return
+					data = await message.attachments[0].read()
+					data = data.decode("utf-8")
+					try:
+						# pdb.set_trace()
+						self.bot.users[author].add_to_index(data)
+						await message.channel.send(f"**Your file has been added to the index.**")
+					except Exception as e:
+						logger.error(e)
+						await message.channel.send(f"**Error creating indices.**")
+
 			isReplyAll =  os.getenv("REPLYING_ALL")
 			if isReplyAll == "True" and message.channel.id == int(os.getenv("REPLYING_ALL_DISCORD_CHANNEL_ID")):
 				if message.author == client.user:
