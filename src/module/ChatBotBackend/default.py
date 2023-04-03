@@ -150,6 +150,9 @@ class User:
 		for paragraph in paragraphs:
 			self.idx.add(paragraph)
 
+	def clear_idx(self, dim):
+		self.idx = Index(dim=dim, get_embedding=get_embedding)
+
 
 
 class ChatBot:

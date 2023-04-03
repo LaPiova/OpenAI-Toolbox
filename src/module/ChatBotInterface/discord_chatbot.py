@@ -240,25 +240,6 @@ class DiscordBot:
 		# 		await interaction.followup.send(
 		# 			"> **Info: Next, the bot will response to all message in this channel only.If you want to switch back to normal mode, use `/replyAll` again.**")
 		# 		logger.warning("\x1b[31mSwitch to replyAll mode\x1b[0m")
-			
-
-		# @client.tree.command(name="chat-model", description="Switch different chat model")
-		# @app_commands.choices(choices=[
-		# 	app_commands.Choice(name="Official GPT-3.5", value="OFFICIAL"),
-		# 	app_commands.Choice(name="Website ChatGPT", value="UNOFFCIAL")
-		# ])
-		# async def chat_model(interaction: discord.Interaction, choices: app_commands.Choice[str]):
-		# 	await interaction.response.defer(ephemeral=False)
-		# 	if choices.value == "OFFICIAL":
-		# 		os.environ["CHAT_MODEL"] = "OFFICIAL"
-		# 		await interaction.followup.send(
-		# 			"> **Info: You are now in Official GPT-3.5 model.**\n> You need to set your `OPENAI_API_KEY` in `env` file.")
-		# 		logger.warning("\x1b[31mSwitch to OFFICIAL chat model\x1b[0m")
-		# 	elif choices.value == "UNOFFCIAL":
-		# 		os.environ["CHAT_MODEL"] = "UNOFFICIAL"
-		# 		await interaction.followup.send(
-		# 			"> **Info: You are now in Website ChatGPT model.**\n> You need to set your `SESSION_TOKEN` or `OPENAI_EMAIL` and `OPENAI_PASSWORD` in `env` file.")
-		# 		logger.warning("\x1b[31mSwitch to UNOFFICIAL(Website) chat model\x1b[0m")
 				
 		@client.tree.command(name="delete", description="Complete reset ChatGPT conversation history")
 		async def delete(interaction: discord.Interaction, *, thread_id:str=None):
@@ -329,6 +310,14 @@ class DiscordBot:
 			await interaction.response.defer(ephemeral=isPrivate)
 			await interaction.followup.send("> **Info: Your chat history has been sent to you in DM.**")
 			await interaction.user.send(file=file)
+
+		@client.tree.command(name="clear", description="Clear indices linked to current user.")
+		async def clear_indices(interaction: discord.Interaction, *, dim:int=1536):
+			author = interaction.user.id
+			isPrivate = self.init_user_and_isPrivate(author)
+			self.bot.users[author].clear_idx(dim=dim)
+			await interaction.response.defer(ephemeral=isPrivate)
+			await interaction.followup.send("> **Info: Your indices has been reset.**")
 
 		@client.tree.command(name="help", description="Show help for the bot")
 		async def help(interaction: discord.Interaction):
