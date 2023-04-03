@@ -43,7 +43,7 @@ class DiscordBot:
 		self.bot.save_history()
 		logger.info("User history saved.")
 
-	@tasks.loop(seconds=10)
+	@tasks.loop(seconds=60)
 	async def save_history_loop(self):
 		self.save_user_history()
 
