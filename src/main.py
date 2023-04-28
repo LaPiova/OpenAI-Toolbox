@@ -6,7 +6,7 @@ import logging
 import pdb
 
 load_dotenv()
-bot = DiscordBot()
+bot = DiscordBot(model="gpt-4-0314")
 
 def halting_handler(signum, frame):
     print("Received signal: ", signum)
